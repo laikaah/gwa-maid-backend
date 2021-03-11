@@ -11,10 +11,6 @@ from flask import request, jsonify
 def register():
     username = request.form.get('username')
     password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
-    
-    if password != confirm_password:
-        return jsonify(success=False)
     
     existing_user = User.query.filter(User.username == username).first()
     
@@ -29,7 +25,7 @@ def register():
     db.session.add(user)
     db.session.commit()
     
-    token = tokenize(username, password)
+    token = tokenize(user.id, password)
     
     return jsonify(token=token,success=True)
 
@@ -45,7 +41,7 @@ def login():
     if not bcrypt.check_password_hash(user.password, password):
         return jsonify(success=False)
     
-    token = tokenize(username, password)
+    token = tokenize(user.id, password)
     
     return jsonify(token=token, success=True)
 
@@ -55,7 +51,7 @@ def get_subjects():
 
     user = get_user_from_token(token)
     
-    if not user:
+    if user is None:
         return jsonify(success=False)
 
     subjects = user.subjects.all()
@@ -67,7 +63,7 @@ def add_subject():
     
     user = get_user_from_token(token)
     
-    if not user:
+    if user is None:
         return jsonify(success=False)
     
     subject_name = request.form.get('subject_name')
@@ -78,6 +74,11 @@ def add_subject():
     )
     
     db.session.add(subject)
+    db.session.flush()
+    
+    user.predicted_grade = (user.predicted_grade + subject.predicted_grade) / (user.subject_count + 1)
+    user.subject_count += 1
+    
     db.session.commit()
     
     return jsonify(success=True)
@@ -88,7 +89,7 @@ def get_assessment_classes():
     subject_name = request.args.get('subject')
     
     user = get_user_from_token(token)
-    if not user:
+    if user is None:
         return jsonify(success=False)
     
     subject = Subject.query.\
@@ -110,7 +111,7 @@ def add_assessment_class():
     
     user = get_user_from_token(token)
     
-    if not user:
+    if user is None:
         return jsonify(success=False)
     
     subject = Subject.query.filter(Subject.name == subject_name).\
@@ -125,6 +126,14 @@ def add_assessment_class():
     )
     
     db.session.add(assessment_class)
+    db.session.flush()
+    
+    assessment_class.subject.predicted_grade = \
+        (assessment_class.subject.predicted_grade + assessment_class.predicted_grade)\
+            /(assessment_class.subject.assessment_class_count + 1)
+
+    assessment_class.subject.assessment_class_count += 1
+
     db.session.commit()
     
     return jsonify(success=True)
@@ -137,6 +146,9 @@ def get_assessments():
     assessment_class_name = request.args.get('assessment_class')
     
     user = get_user_from_token(token)
+    
+    if user is None:
+        return jsonify(success=False)
     
     subject = Subject.query.\
         filter(Subject.name == subject_name).\
@@ -166,7 +178,7 @@ def add_assessment():
 
     user = get_user_from_token(token)
 
-    if not user:
+    if user is None:
         return jsonify(success=False)
     
     subject = Subject.query.filter(Subject.name == subject_name).\
@@ -188,6 +200,14 @@ def add_assessment():
     )
     
     db.session.add(assessment)
+    db.session.flush()
+    
+    assessment.assessment_class.predicted_grade = \
+        (assessment.assessment_class.predicted_grade + assessment.grade)\
+            / (assessment.assessment_class.assessment_count + 1)
+            
+    assessment.assessment_class.assessment_count += 1
+    
     db.session.commit()
     
     return jsonify(success=True)

@@ -1,5 +1,4 @@
-from flask import Flask, session, url_for
-from flask_session import Session
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
@@ -21,7 +20,3 @@ fernet = Fernet(app.config['FERNET_KEY'])
 
 # set session type
 app.config['SESSION_TYPE'] = 'filesystem'
-
-Session(app)
-
-from gwa_maid import routes

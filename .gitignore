@@ -12,6 +12,8 @@ bin/
 # flask
 flask_session/
 
+.envrc
+
 # Distribution / packaging
 .Python
 build/
@@ -22,7 +24,7 @@ eggs/
 .eggs/
 lib/
 lib64/
-parts/
+parts/  
 sdist/
 var/
 wheels/

@@ -5,6 +5,17 @@ from gwa_maid.helpers import get_user_from_token, tokenize
 from gwa_maid.models import Assessment, AssessmentClass, Subject, User
 
 
+@app.route('/verify_token', methods=['POST'])
+def verify():
+    token = request.form.get('token')
+
+    user = get_user_from_token(token)
+
+    if user is None:
+        return jsonify(success=False)
+    return jsonify(success=True)
+
+
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form.get('username')

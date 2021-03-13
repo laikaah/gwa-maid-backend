@@ -10,9 +10,8 @@ def index():
     return 'Welcome!'
 
 
-@app.route('/verify_token', methods=['POST'])
+@app.route('/verify_token', methods=['POST', 'OPTIONS'])
 def verify():
-    print(request.json)
     if not request.json:
         return jsonify(success=False)
     if 'token' not in request.json:

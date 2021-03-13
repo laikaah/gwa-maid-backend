@@ -12,6 +12,9 @@ class User(db.Model):
 
     predicted_grade = db.Column(db.Integer, nullable=True)
 
+    def __repr__(self):
+        return f'User<id: {self.id}, username: {self.username}>'
+
 
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -51,6 +54,6 @@ class Assessment(db.Model):
     name = db.Column(db.String(20), unique=True, nullable=False)
 
     assessment_class_id = db.Column(
-        db.Integer, db.ForeignKey('assessment_class.id'), lazy=True)
+        db.Integer, db.ForeignKey('assessment_class.id'), nullable=False)
 
     grade = db.Column(db.Integer, nullable=False)

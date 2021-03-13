@@ -5,9 +5,20 @@ from gwa_maid.helpers import get_user_from_token, tokenize
 from gwa_maid.models import Assessment, AssessmentClass, Subject, User
 
 
+@app.route('/')
+def index():
+    return 'Welcome!'
+
+
 @app.route('/verify_token', methods=['POST'])
 def verify():
-    token = request.form.get('token')
+    print(request.json)
+    if not request.json:
+        return jsonify(success=False)
+    if 'token' not in request.json:
+        return jsonify(success=False)
+
+    token = request.json['token']
 
     user = get_user_from_token(token)
 
@@ -18,8 +29,17 @@ def verify():
 
 @app.route('/register', methods=['POST'])
 def register():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if not request.json:
+        return jsonify(success=False)
+
+    if 'username' not in request.json or 'password' not in request.json:
+        return jsonify(success=False)
+
+    username = request.json['username']
+    password = request.json['password']
+
+    if not username or not password:
+        return jsonify(success=False)
 
     existing_user = User.query.filter(User.username == username).first()
 

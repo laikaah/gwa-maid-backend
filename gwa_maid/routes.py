@@ -54,14 +54,23 @@ def register():
     db.session.commit()
 
     token = tokenize(user.id, password)
+    
+    print('success')
+    print(username, password)
 
     return jsonify(token=token, success=True)
 
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    if not request.json:
+        return jsonify(success=False)
+
+    if 'username' not in request.json or 'password' not in request.json:
+        return jsonify(success=False)
+    
+    username = request.json['username']
+    password = request.json['password']
 
     user = User.query.filter(User.username == username).first()
     if not user:
@@ -85,7 +94,8 @@ def get_subjects():
         return jsonify(success=False)
 
     subjects = user.subjects.all()
-    return jsonify(subjects=subjects, success=True)
+    serialized_subjects = [subject.serialize for subject in subjects]
+    return jsonify(subjects=serialized_subjects, success=True)
 
 
 @app.route('/subjects/add', methods=['POST'])
@@ -116,25 +126,27 @@ def add_subject():
     return jsonify(success=True)
 
 
-@app.route('/subjects/assessment_classes', methods=['GET'])
-def get_assessment_classes():
-    token = request.args.get('token')
-    subject_name = request.args.get('subject')
+# @app.route('/subjects/assessment_classes', methods=['GET'])
+# def get_assessment_classes():
+#     token = request.args.get('token')
+#     subject_name = request.args.get('subject')
 
-    user = get_user_from_token(token)
-    if user is None:
-        return jsonify(success=False)
+#     user = get_user_from_token(token)
+#     if user is None:
+#         return jsonify(success=False)
 
-    subject = Subject.query.\
-        filter(Subject.name == subject_name).\
-        filter(Subject.owner.has(User.id == token)).first()
+#     subject = Subject.query.\
+#         filter(Subject.name == subject_name).\
+#         filter(Subject.owner.has(User.id == token)).first()
 
-    if not subject:
-        return jsonify(success=False)
+#     if not subject:
+#         return jsonify(success=False)
 
-    assessment_classes = subject.assessment_classes.all()
+#     assessment_classes = subject.assessment_classes.all()
+#     serialized_assessment_classes = [
+#         a_class.serialize for a_class in assessment_classes]
 
-    return jsonify(assessment_classes=assessment_classes, success=True)
+#     return jsonify(assessment_classes=serialized_assessment_classes, success=True)
 
 
 @app.route('/subjects/assessment_classes/add', methods=['POST'])
@@ -173,34 +185,37 @@ def add_assessment_class():
     return jsonify(success=True)
 
 
-@app.route('/subjects/assessment_classes/assessments', methods=['GET'])
-def get_assessments():
-    token = request.args.get('token')
-    subject_name = request.args.get('subject')
-    assessment_class_name = request.args.get('assessment_class')
+# @app.route('/subjects/assessment_classes/assessments', methods=['GET'])
+# def get_assessments():
+#     token = request.args.get('token')
+#     subject_name = request.args.get('subject')
+#     assessment_class_name = request.args.get('assessment_class')
 
-    user = get_user_from_token(token)
+#     user = get_user_from_token(token)
 
-    if user is None:
-        return jsonify(success=False)
+#     if user is None:
+#         return jsonify(success=False)
 
-    subject = Subject.query.\
-        filter(Subject.name == subject_name).\
-        filter(Subject.owner.has(User.id == token)).first()
+#     subject = Subject.query.\
+#         filter(Subject.name == subject_name).\
+#         filter(Subject.owner.has(User.id == token)).first()
 
-    if not subject:
-        return jsonify(success=False)
+#     if not subject:
+#         return jsonify(success=False)
 
-    assessment_class = AssessmentClass.query.\
-        filter(AssessmentClass.name == assessment_class_name).\
-        filter(AssessmentClass.subject.has(Subject.id == subject.id))
+#     assessment_class = AssessmentClass.query.\
+#         filter(AssessmentClass.name == assessment_class_name).\
+#         filter(AssessmentClass.subject.has(Subject.id == subject.id))
 
-    if not assessment_class:
-        return jsonify(success=False)
+#     if not assessment_class:
+#         return jsonify(success=False)
 
-    assessments = assessment_class.assessments.all()
+#     assessments = assessment_class.assessments.all()
 
-    return jsonify(assessments=assessments, success=True)
+#     serialized_assessments = [
+#         assessment.serialize for assessment in assessments]
+
+#     return jsonify(assessments=serialized_assessments, success=True)
 
 
 @app.route('/subjects/assessment_classes/assessments/add', methods=['POST'])
@@ -222,7 +237,8 @@ def add_assessment():
     if not subject:
         return jsonify(success=False)
 
-    assessment_class = AssessmentClass.query.filter(AssessmentClass.name == assessment_class_name).\
+    assessment_class = AssessmentClass.query.\
+        filter(AssessmentClass.name == assessment_class_name).\
         filter(AssessmentClass.subject.has(Subject.id == subject.id))
 
     if not assessment_class:

@@ -15,6 +15,17 @@ class User(db.Model):
     def __repr__(self):
         return f'User<id: {self.id}, username: {self.username}>'
 
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'password': self.password,
+            'subjects': [subject.serialize for subject in self.subjects],
+            'subject_count': self.subject_count,
+            'predicted_grade': self.predicted_grade
+        }
+
 
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -30,6 +41,23 @@ class Subject(db.Model):
                              nullable=False, default=datetime.now())
 
     predicted_grade = db.Column(db.Integer, nullable=False, default=80)
+
+    def __repr__(self):
+        return f'Subject<id: {self.id}, name: {self.name}>'
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.id,
+            'user_id': self.user_id,
+            'weight': self.weight,
+            'assessment_classes': [a_class.serialize
+                                   for a_class in self.assessment_classes],
+            'assessment_class_count': self.assessment_class_count,
+            'last_updated': self.last_updated.strftime('%d %B, %Y'),
+            'predicted_grade': self.predicted_grade
+        }
 
 
 class AssessmentClass(db.Model):
@@ -48,6 +76,19 @@ class AssessmentClass(db.Model):
 
     predicted_grade = db.Column(db.Integer, nullable=False, default=80)
 
+    def __repr__(self):
+        return f'AssessmentClass<id: {self.id}, name: {self.name}>'
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.id,
+            'subject_id': self.subject_id,
+            'weight': self.weight,
+            'assessments': [a.serialize for a in self.assessments]
+        }
+
 
 class Assessment(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -57,3 +98,15 @@ class Assessment(db.Model):
         db.Integer, db.ForeignKey('assessment_class.id'), nullable=False)
 
     grade = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return f'Assessment<id: {self.id}, name: {self.name}>'
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'assessment_class_id': self.assessment_class_id,
+            'grade': self.grade
+        }

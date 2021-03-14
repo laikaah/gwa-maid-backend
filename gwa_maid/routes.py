@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import json, jsonify, request
 
 from gwa_maid import app, bcrypt, db
 from gwa_maid.helpers import get_user_from_token, tokenize
@@ -54,7 +54,7 @@ def register():
     db.session.commit()
 
     token = tokenize(user.id, password)
-    
+
     print('success')
     print(username, password)
 
@@ -68,7 +68,7 @@ def login():
 
     if 'username' not in request.json or 'password' not in request.json:
         return jsonify(success=False)
-    
+
     username = request.json['username']
     password = request.json['password']
 
@@ -86,7 +86,13 @@ def login():
 
 @app.route('/subjects', methods=['GET'])
 def get_subjects():
-    token = request.args.get('token')
+    if not request.json:
+        return jsonify(success=False)
+
+    if 'token' not in request.json:
+        return jsonify(success=False)
+
+    token = request.json['token']
 
     user = get_user_from_token(token)
 
@@ -100,7 +106,13 @@ def get_subjects():
 
 @app.route('/subjects/add', methods=['POST'])
 def add_subject():
-    token = request.forms.get('token')
+    if not request.json:
+        return jsonify(success=False)
+
+    if 'token' not in request.json:
+        return jsonify(success=False)
+
+    token = request.json['token']
 
     user = get_user_from_token(token)
 
@@ -146,14 +158,25 @@ def add_subject():
 #     serialized_assessment_classes = [
 #         a_class.serialize for a_class in assessment_classes]
 
-#     return jsonify(assessment_classes=serialized_assessment_classes, success=True)
+#     return jsonify(assessment_classes=serialized_assessment_classes
+# success=True)
 
 
 @app.route('/subjects/assessment_classes/add', methods=['POST'])
 def add_assessment_class():
-    token = request.form.get('token')
-    subject_name = request.form.get('subject_name')
-    assessment_class_name = request.form.get('assessment_class_name')
+    if not request.json:
+        return jsonify(False)
+
+    if 'token' not in request.json:
+        return jsonify(success=False)
+    if 'subject_name' not in request.json:
+        return jsonify(success=False)
+    if 'assessment_class_name' not in request.json:
+        return jsonify(success=False)
+
+    token = request.json['token']
+    subject_name = request.json['subject_name']
+    assessment_class_name = request.json['assessment_class_name']
 
     user = get_user_from_token(token)
 
@@ -220,11 +243,25 @@ def add_assessment_class():
 
 @app.route('/subjects/assessment_classes/assessments/add', methods=['POST'])
 def add_assessment():
-    token = request.form.get('token')
-    subject_name = request.form.get('subject_name')
-    assessment_class_name = request.form.get('assessment_class_name')
-    assessment_name = request.form.get('assessment_name')
-    assessment_grade = request.form.get('assessment_grade', type=int)
+    if not request.json:
+        return jsonify(success=False)
+
+    if 'token' not in request.json:
+        return jsonify(success=False)
+    if 'subject_name' not in request.json:
+        return jsonify(success=False)
+    if 'assessment_class_name' not in request.json:
+        return jsonify(success=False)
+    if 'assessment_name' not in request.json:
+        return jsonify(success=False)
+    if 'assessment_grade' not in request.json:
+        return jsonify(success=False)
+
+    token = request.json['token']
+    subject_name = request.json['subject_name']
+    assessment_class_name = request.json['assessment_class_name']
+    assessment_name = request.json['assessment_name']
+    assessment_grade = request.json['assessment_grade']
 
     user = get_user_from_token(token)
 

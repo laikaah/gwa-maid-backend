@@ -12,7 +12,7 @@ bin/
 # flask
 flask_session/
 
-.envrc
+*.envrc
 
 # Distribution / packaging
 .Python

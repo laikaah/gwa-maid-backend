@@ -15,7 +15,9 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
-CORS(app)
+cors = CORS(app)
+
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 fernet_key = os.environ.get('FERNET_KEY').encode('utf-8')
 fernet = Fernet(fernet_key)

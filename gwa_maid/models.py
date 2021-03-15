@@ -48,12 +48,33 @@ class Subject(db.Model):
     def __repr__(self):
         return f'Subject<id: {self.id}, name: {self.name}>'
 
+    # serialize object up to n dimensions
+    # (do this to avoid recursive serializing)
     @property
-    def serialize(self):
+    def serialize(self, dimensions=5):
+        if dimensions == 1:
+            return {
+                'id': self.id,
+                'name': self.name,
+                'weight': self.weight,
+                'assessment_classes': [a_class.serialize
+                                       for a_class in self.assessment_classes],
+                'assessment_class_count': self.assessment_class_count,
+                'last_updated': self.last_updated,
+                'predicted_grade': self.predicted_grade
+            }
         return {
             'id': self.id,
             'name': self.name,
-            'user_id': self.user_id,
+            'user': {
+                'id': self.user.id,
+                'username': self.user.username,
+                'password': self.user.password,
+                'subjects': [subject.serialize(dimensions-1)
+                             for subject in self.user.subjects],
+                'subject_count': self.user.subject_count,
+                'predicted_grade': self.user.predicted_grade
+            },
             'weight': self.weight,
             'assessment_classes': [a_class.serialize
                                    for a_class in self.assessment_classes],
@@ -83,12 +104,42 @@ class AssessmentClass(db.Model):
     def __repr__(self):
         return f'AssessmentClass<id: {self.id}, name: {self.name}>'
 
+    # serialize object up to n dimensions
+    # (do this to avoid recursive serializing)
     @property
-    def serialize(self):
+    def serialize(self, dimensions=5):
+        if dimensions == 1:
+            return {
+                'id': self.id,
+                'name': self.name,
+                'subject': {
+                    'id': self.subject.id,
+                    'name': self.subject.name,
+                    'weight': self.subject.weight,
+                    'assessment_class_count':
+                        self.subject.assessment_class_count,
+                    'last_updated': self.subject.last_updated,
+                    'predicted_grade': self.predicted_grade
+                },
+                'weight': self.weight,
+                'assessments': [a.serialize for a in self.assessments],
+                'last_updated': self.last_updated,
+                'predicted_grade': self.predicted_grade
+            }
         return {
             'id': self.id,
             'name': self.name,
-            'subject_id': self.subject_id,
+            'subject': {
+                'id': self.subject.id,
+                'name': self.subject.name,
+                'weight': self.subject.weight,
+                'assessment_classes': [a_class.serialize(dimensions-1) for
+                                       a_class in self.subject.
+                                       assessment_classes],
+                'assessment_class_count': self.subject.assessment_class_count,
+                'last_updated': self.subject.last_updated,
+                'predicted_grade': self.predicted_grade
+            },
             'weight': self.weight,
             'assessments': [a.serialize for a in self.assessments],
             'last_updated': self.last_updated,
@@ -111,12 +162,38 @@ class Assessment(db.Model):
     def __repr__(self):
         return f'Assessment<id: {self.id}, name: {self.name}>'
 
+    # serialize object up to n dimensions
+    # (do this to avoid recursive serializing)
     @property
-    def serialize(self):
+    def serialize(self, dimensions=5):
+        if dimensions == 1:
+            return {
+                'id': self.id,
+                'name': self.name,
+                'assessment_class': {
+                    'id': self.assessment_class.id,
+                    'name': self.assessment_class.name,
+                    'weight': self.assessment_class.weight,
+                    'assessment_count': self.assessment_class.assessment_count,
+                    'last_updated': self.last_updated,
+                    'predicted_grade': self.predicted_grade
+                },
+                'last_updated': self.last_updated,
+                'grade': self.grade
+            }
         return {
             'id': self.id,
             'name': self.name,
-            'assessment_class_id': self.assessment_class_id,
+            'assessment_class': {
+                'id': self.assessment_class.id,
+                'name': self.assessment_class.name,
+                'weight': self.assessment_class.weight,
+                'assessments': [a.serialize(dimensions-1)
+                                for a in self.assessment_class.assessments],
+                'assessment_count': self.assessment_class.assessment_count,
+                'last_updated': self.last_updated,
+                'predicted_grade': self.predicted_grade
+            },
             'last_updated': self.last_updated,
             'grade': self.grade
         }

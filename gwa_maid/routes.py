@@ -241,11 +241,9 @@ def add_assessment_class():
 
     total_weight = sum(
         [a_class.weight / 100 for a_class in assessment_classes])
-    print('total_weight is', total_weight)
+
     if total_weight < 1:
         total_grade += (1 - total_weight) * 80
-
-    print('total grade is', total_grade)
 
     subject.predicted_grade = total_grade
 
@@ -294,19 +292,18 @@ def add_assessment_class():
 @app.route('/subjects/assessment_classes/assessments/add',
            methods=['POST', 'OPTIONS'])
 def add_assessment():
+    # check that the requested parameters exist and are correct
     if not request.json:
         return jsonify(success=False)
 
-    if 'token' not in request.json:
-        return jsonify(success=False)
-    if 'subject_name' not in request.json:
-        return jsonify(success=False)
-    if 'assessment_class_name' not in request.json:
-        return jsonify(success=False)
-    if 'assessment_name' not in request.json:
-        return jsonify(success=False)
-    if 'assessment_grade' not in request.json:
-        return jsonify(success=False)
+    required_params = [
+        'token', 'subject_name',
+        'assessment_class_name', 'assessment_name',
+        'assessment_grade'
+    ]
+    for param in required_params:
+        if param not in request.json:
+            return jsonify(success=False)
 
     token = request.json['token']
     subject_name = request.json['subject_name']
@@ -332,6 +329,7 @@ def add_assessment():
     if not assessment_class:
         return jsonify(success=False)
 
+    # create new assessment object
     assessment = Assessment(
         name=assessment_name,
         assessment_class_id=assessment_class.id,
@@ -339,13 +337,37 @@ def add_assessment():
     )
 
     db.session.add(assessment)
+    assessment.assessment_class.assessment_count += 1
+
     db.session.flush()
 
-    assessment.assessment_class.predicted_grade = \
-        (assessment.assessment_class.predicted_grade + assessment.grade)\
-        / (assessment.assessment_class.assessment_count + 1)
+    # update parent assessment_class predicted grade
+    assessment_count = assessment.assessment_class.assessment_count
+    assessment.assessment_class.predicted_grade = sum([
+        a.grade for a in assessment.assessment_class.assessments
+    ]) / assessment_count
 
-    assessment.assessment_class.assessment_count += 1
+    # update parent assessment_class last_updated
+    assessment.assessment_class.last_updated = assessment.last_updated
+
+    # update parent assessment_class parent subject predicted_grade
+    total_weight = sum([
+        a_class.weight / 100 for a_class in
+        assessment.assessment_class.subject.assessment_classes
+    ])
+
+    total_grade = sum([
+        a_class.grade for a_class in
+        assessment.assessment_class.subject.assessment_classes
+    ]) / assessment.assessment_class.subject.assessment_class_count
+
+    if total_weight < 1:
+        total_grade += (1 - total_weight) * 80
+
+    assessment.assessment_class.subject.predicted_grade = total_grade
+
+    # update parent assessment_class parent subject last_updated
+    assessment.assessment_class.subject.last_updated = assessment.last_updated
 
     db.session.commit()
 

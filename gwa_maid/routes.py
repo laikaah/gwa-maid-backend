@@ -1,7 +1,6 @@
-from logging import lastResort
-from flask import json, jsonify, request
+from flask import jsonify, request
 
-from gwa_maid import app, bcrypt, db, cors
+from gwa_maid import app, bcrypt, db
 from gwa_maid.helpers import get_user_from_token, tokenize
 from gwa_maid.models import Assessment, AssessmentClass, Subject, User
 
@@ -193,8 +192,11 @@ def add_assessment_class():
     if not request.json:
         return jsonify(False)
 
-    required_params = ['token', 'subject_name',
-                       'last_updated', 'assessment_class_name', 'assessment_class_weight', 'predicted_grade']
+    required_params = [
+        'token', 'subject_name',
+        'last_updated', 'assessment_class_name', 'assessment_class_weight',
+        'predicted_grade'
+    ]
     for param in required_params:
         if param not in request.json:
             return jsonify(success=False)
@@ -242,7 +244,7 @@ def add_assessment_class():
     print('total_weight is', total_weight)
     if total_weight < 1:
         total_grade += (1 - total_weight) * 80
-    
+
     print('total grade is', total_grade)
 
     subject.predicted_grade = total_grade
@@ -289,7 +291,8 @@ def add_assessment_class():
 #     return jsonify(assessments=serialized_assessments, success=True)
 
 
-@app.route('/subjects/assessment_classes/assessments/add', methods=['POST', 'OPTIONS'])
+@app.route('/subjects/assessment_classes/assessments/add',
+           methods=['POST', 'OPTIONS'])
 def add_assessment():
     if not request.json:
         return jsonify(success=False)
